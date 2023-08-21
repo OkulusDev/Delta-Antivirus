@@ -56,7 +56,7 @@ def scan_file(filename: str, delete_file: bool=False) -> None:
 Дневная квота        500 поисков / день
 Месячная квота	     15.5 K поисков / месяц''')
 
-		client = vt.Client("4d019ca3e13ae6982d5e7b141e1553a8d946e05aaf6c8d5732bf35b0f8281732")
+		client = vt.Client("API_KEY_VT")
 
 		try:
 			print('Попытка нахождения файла...')
