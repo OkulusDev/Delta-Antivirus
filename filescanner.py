@@ -14,7 +14,7 @@ import vt
 
 @cache
 def scan_file(filename: str, delete_file: bool=False) -> None:
-	print(f'Сканируем {filename} на наличие угроз...')
+	result = f'Сканируем {filename} на наличие угроз...\n'
 	try:
 		start = perf_counter()
 		shahash = sha256()
@@ -34,6 +34,7 @@ def scan_file(filename: str, delete_file: bool=False) -> None:
 			result2 = sha1hash.hexdigest()
 			result3 = md5hash.hexdigest()
 			print(f'{Fore.YELLOW}[+] Проверяем наличие хеша {result} в сигнатурах...{Style.RESET_ALL}')
+			result += f'Проверяем наличие хеша {result} в сигнатурах...\n'
 
 		with open(signature_resources[0], 'r') as r:
 			signatures = list(r.read().split('\n'))
@@ -50,48 +51,66 @@ def scan_file(filename: str, delete_file: bool=False) -> None:
 			for sign_hash4 in list(r.read().replace(';', '').split('\n')):
 				signatures.append(sign_hash4)
 
-		print(f'''Сканирование {filename} на Virus Total...
+		try:
+			print(f'''Сканирование {filename} на Virus Total...
 
 Частота запросов     4 поисков / минута
 Дневная квота        500 поисков / день
 Месячная квота	     15.5 K поисков / месяц''')
 
-		client = vt.Client("API_KEY_VT")
+			client = vt.Client("API_KEY_VT")
 
-		try:
-			print('Попытка нахождения файла...')
-			file = client.get_object(f"/files/{result}")
-			stats = file.last_analysis_stats
+			try:
+				print('Попытка нахождения файла...')
+				file = client.get_object(f"/files/{result}")
+				stats = file.last_analysis_stats
 
-			print(f'''VirusTotal: {filename}
+				print(f'''VirusTotal: {filename}
 Безвредный: {stats["harmless"]}
 Неподдерживаемый тип: {stats["type-unsupported"]}
 Подозрительный: {stats["suspicious"]}
 Отказ: {stats["failure"]}
 Злонамеренный: {stats["malicious"]}
 Безопасный: {stats["undetected"]}
-		''')
+				''')
+				result += f'''VirusTotal: {filename}
+Безвредный: {stats["harmless"]}
+Неподдерживаемый тип: {stats["type-unsupported"]}
+Подозрительный: {stats["suspicious"]}
+Отказ: {stats["failure"]}
+Злонамеренный: {stats["malicious"]}
+Безопасный: {stats["undetected"]}\n'''
+			except vt.error.APIError:
+				print('Загрузка файла...')
+				with open(filename, "rb") as f:
+					analysis = client.scan_file(f, wait_for_completion=True)
+
+				file = client.get_object(f"/files/{result}")
+				stats = file.last_analysis_stats
+
+				print(f'''VirusTotal: {filename}
+Безвредный: {stats["harmless"]}
+Неподдерживаемый тип: {stats["type-unsupported"]}
+Подозрительный: {stats["suspicious"]}
+Отказ: {stats["failure"]}
+Злонамеренный: {stats["malicious"]}
+Безопасный: {stats["undetected"]}
+				''')
+				result += f'''VirusTotal: {filename}
+Безвредный: {stats["harmless"]}
+Неподдерживаемый тип: {stats["type-unsupported"]}
+Подозрительный: {stats["suspicious"]}
+Отказ: {stats["failure"]}
+Злонамеренный: {stats["malicious"]}
+Безопасный: {stats["undetected"]}\n'''
 		except vt.error.APIError:
-			print('Загрузка файла...')
-			with open(filename, "rb") as f:
-				analysis = client.scan_file(f, wait_for_completion=True)
-
-			file = client.get_object(f"/files/{result}")
-			stats = file.last_analysis_stats
-
-			print(f'''VirusTotal: {filename}
-Безвредный: {stats["harmless"]}
-Неподдерживаемый тип: {stats["type-unsupported"]}
-Подозрительный: {stats["suspicious"]}
-Отказ: {stats["failure"]}
-Злонамеренный: {stats["malicious"]}
-Безопасный: {stats["undetected"]}
-		''')
+			pass
 
 		if result in signatures or result2 in signatures or result3 in signatures:
 			end = perf_counter()
 			total = end - start
 			print(f'{Fore.RED}[!] Найдена угроза в файле {filename}!{Style.RESET_ALL}')
+			result += f'Найдена угроза в файле {filename}'
 
 			if result in signatures:
 				info = get_info_signature(result)
@@ -111,6 +130,7 @@ def scan_file(filename: str, delete_file: bool=False) -> None:
 			end = perf_counter()
 			total = end - start
 			print('[+] Угроз не найдено')
+			result += 'Угроз не найдено'
 			print(f'Время работы: {(total):.07f}s')
 	except FileNotFoundError:
 		print(f'{Fore.RED}[!] Файл не найден{Style.RESET_ALL}')
@@ -119,4 +139,4 @@ def scan_file(filename: str, delete_file: bool=False) -> None:
 
 	print()
 
-	return None
+	return result

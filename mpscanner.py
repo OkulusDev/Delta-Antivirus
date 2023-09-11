@@ -35,7 +35,7 @@ class MeterpreterScanner:
 		elif win[0] == '7':
 			self._signatures = WIN_7_SIGNATURE
 		else:
-			print("[X] Only for Windows 7 or Windows 10.")
+			print("[X] Только Windows 7 или Windows 10")
 
 	def _search_process_with_dll(self, dll: str) -> None:
 		output_tasklist = subprocess.check_output(f"{CMD_TASKLIST_COMMAND} {dll}", shell=True)
@@ -56,10 +56,10 @@ class MeterpreterScanner:
 		for proc_info in self._suspicious_processes.items():
 			proc_name, proc_dlls = proc_info
 			if len(proc_dlls) == 5:
-				print(f"[-] Detected meterpreter signature in memory: {proc_name}")
+				print(f"[-] Найден подозрительный процесс : {proc_name}")
 				self._processes_with_signatures.append(proc_name)
 		if not self._processes_with_signatures:
-			print("[+] Meterpreter signature in memory not found")
+			print("[+] Meterpreter сигнатура не найдена в памяти")
 
 	def _scan_suspicious_ports(self) -> None:
 		scan_output = subprocess.check_output(CMD_NETSTAT_COMMAND, shell=True)
@@ -74,9 +74,9 @@ class MeterpreterScanner:
 					suspicious_socket, suspicious_PID = suspicious_info
 					# port 4444 used by default in MSF and meterpreter
 					if int(suspicious_socket.split(':')[-1]) == 4444:
-						print(f"[!] Detected MSF connection with {suspicious_socket}")
-					print(f"[-] Connection {victim_socket} to {suspicious_socket} "
-						  f"used dynamic port on PID - {suspicious_PID}")
+						print(f"[!] Найдено MSF подключение: {suspicious_socket}")
+					print(f"[-] Подключение {victim_socket} к {suspicious_socket} "
+						  f"использование динамический PID - {suspicious_PID}")
 					self._processes_with_dynamic_port.append(suspicious_PID)
 
 	def finding_meterpreter_sessions(self):
@@ -87,8 +87,8 @@ class MeterpreterScanner:
 		for proc in self._processes_with_signatures:
 			proc_name, proc_PID = proc.split('_')
 			if proc_PID in self._processes_with_dynamic_port:
-				print(f'[!] A match was found in process {proc_name} with PID {proc_PID}')
+				print(f'[!] Найдено совпадение в {proc_name} с PID {proc_PID}')
 				found = True
 
 		if not found:
-			print(f"[+] A match wasn't found")
+			print(f"[+] Совпадений не найдено")
