@@ -68,7 +68,7 @@ def main():
 
 	parser.add_argument('--scan-pyscript', required=False, help='Сканирование python-скриптов на угрозы')
 
-	parser.add_argument('--detect-meterpeter', required=False, help='Сканирование Windows 7/10 на сессии meterpreter', choices=['start'], default='start')
+	parser.add_argument('--detect-meterpreter', required=False, help='Сканирование Windows 7/10 на сессии meterpreter', choices=['start'], default='start')
 
 	args = parser.parse_args()
 
@@ -95,7 +95,7 @@ def main():
 					arpspoof_detector.sniffing()
 				except PermissionError:
 					print('[!] Недостаточно прав для запуска детектора ARP-спуфинга. Запустите Delta-Antivirus от имени администратора')
-			if args.detect_arpspoof:
+			if args.detect_meterpreter:
 				try:
 					MeterpreterScanner().finding_meterpreter_sessions()
 				except Exception as e:
